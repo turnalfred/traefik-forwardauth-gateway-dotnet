@@ -3,7 +3,7 @@ version: "3.5"
 services:
   authserver:
     container_name: authserver
-    image: ${REGISTRY}/authserver:${TAG:-latest}
+    image: ${REGISTRY}authserver:${TAG:-latest}
     build:
       context: ../src/
       dockerfile: Dockerfile
