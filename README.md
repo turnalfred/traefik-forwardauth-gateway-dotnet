@@ -1,12 +1,14 @@
-# Example Traefik ForwardAuth Gateway for .NET
+# Traefik ForwardAuth .NET Gateway Example
 
-A traefik forwardAuth gateway/service written in .NET. The purpose of this service is to hook into the traefik forwardAuth middleware and provide a session related endpoints for an app sitting behind traefik. The auth gateway performs session related checks and then forwards user related info as fwd `X-` headers to downstream services.
+A traefik forwardAuth gateway/service written in .NET. The purpose of this service is to hook into the traefik forwardAuth middleware and provide a session related endpoints for an app sitting behind traefik. The auth gateway performs session related checks and then forwards user related info as forward (`X-Auth-*`) headers to downstream services.
 
 The topology of an app utilising a forwardAuth gateway might look something like the below:
 
 ![ForwardAuth Topology](./docs/forwardauth-topology.png)
 
 In the image above the public request would first hit traefik. If the endpoint is configured to use forwardAuth middleware it will be passed onto our AuthGateway which will response with a 200, 401 or 302 depending on the session state. If the session is valid the request will be passed onto the downstream app with the user related info passed as `X-` headers.
+
+There are similar solutions such as oauth2-proxy that utilise traefik forwardAuth or nginx request_auth, but I couldn't find anything existing that leverages .NET middleware. (see link section at bottom of README for similar solutions)
 
 Notable TODO's:
 
