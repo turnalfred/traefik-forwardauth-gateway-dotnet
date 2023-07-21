@@ -1,0 +1,10 @@
+version: "3.5"
+
+services:
+  exampleservice:
+    container_name: exampleservice
+    build:
+      context: ./exampleservice/
+      dockerfile: Dockerfile
+    networks:
+      - application-network

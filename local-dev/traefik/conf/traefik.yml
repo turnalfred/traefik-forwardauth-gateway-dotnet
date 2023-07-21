@@ -1,0 +1,18 @@
+api:
+  insecure: true
+log:
+  level: INFO
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+
+entryPoints:
+  http:
+    address: ":80"
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: https
+    #       scheme: https
+  https:
+    address: ":443"

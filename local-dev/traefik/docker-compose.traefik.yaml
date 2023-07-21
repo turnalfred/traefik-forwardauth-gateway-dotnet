@@ -1,0 +1,15 @@
+version: "3.5"
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:${TRAEFIK_VERSION}
+    volumes:
+      - "./traefik/conf:/etc/traefik"
+      - "./traefik/certs:/etc/certs"
+    networks:
+      - application-network
+    ports:
+      - "8081:8080" # dashboard
+      - "8082:80" # http
+      - "8083:443" # https

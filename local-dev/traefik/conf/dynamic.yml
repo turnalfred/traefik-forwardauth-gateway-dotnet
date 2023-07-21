@@ -1,0 +1,79 @@
+http:
+  routers:
+    exampleapp-route: # example app main page routes
+      rule: "Host(`localhost`)"
+      service: example-app
+      middlewares:
+        - oauth-auth-redirect
+      tls: true
+    exampleapp-public-route: # example app routes which are public (no auth)
+      rule: "Host(`localhost`) && PathPrefix(`/p/`)"
+      service: example-app
+      tls: true
+    exampleapp-route-assets: # example app static assets are served unauthenticated
+      rule: "Host(`localhost`) && PathPrefix(`/_next/static/`)"
+      service: example-app
+      tls: true
+    exampleservice-route: # example service matches all under /api/
+      rule: "Host(`localhost`) && PathPrefix(`/api/`)"
+      service: example-service
+      middlewares:
+        - oauth-auth-redirect
+      tls: true
+    services-oauth2-route: # authserver routes needed from UI (e.g. interactive login, userinfo)
+      rule: "Host(`localhost`) && PathPrefix(`/oauth2/providers`, `/oauth2/login` , `/oauth2/signin`, `/oauth2/user`, `/oauth2/signout`)"
+      service: oauth-backend
+      tls: true
+      middlewares:
+        - auth-headers
+  
+  services:
+    example-service:
+      loadBalancer:
+        servers:
+          - url: http://exampleservice
+    oauth-backend:
+      loadBalancer:
+        servers:
+          # - url: http://authserver
+          - url: http://host.docker.internal:5250
+    example-app:
+      loadBalancer:
+        servers:
+          - url: http://host.docker.internal:3000 
+
+  middlewares:
+    auth-headers:
+      headers:
+        stsSeconds: 315360000
+        browserXssFilter: true
+        contentTypeNosniff: true
+        # forceSTSHeader: true
+        # stsIncludeSubdomains: true
+        # stsPreload: true
+        frameDeny: true
+    oauth-auth-redirect:
+      forwardAuth:
+        # address: http://authserver/oauth2/check/interactive
+        address: http://host.docker.internal:5250/oauth2/check/interactive
+        trustForwardHeader: true
+        authResponseHeadersRegex: "^X-Auth-"
+        # authResponseHeaders:
+        #   - X-Auth-Request-Access-Token
+        #   - Authorization
+    oauth-auth-wo-redirect:
+      forwardAuth:
+        # address: http://authserver/oauth2/check
+        address: http://host.docker.internal:5250/oauth2/check
+        trustForwardHeader: true
+        authResponseHeadersRegex: "^X-Auth-"
+        # authResponseHeaders:
+        #   - X-Auth-Request-Access-Token
+        #   - Authorization
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/certs/dev-cert.pem
+        keyFile: /etc/certs/dev-cert.key

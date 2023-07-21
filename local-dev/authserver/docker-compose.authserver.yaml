@@ -1,0 +1,10 @@
+version: "3.5"
+
+services:
+  authserver:
+    container_name: authserver
+    build:
+      context: ../src/
+      dockerfile: ./ForwardAuthServer.Api/Dockerfile
+    networks:
+      - application-network
