@@ -61,15 +61,16 @@ cd local-dev
 
 4. Check containers are running
 
-Should see;
-
 - `traefik` - app gateway
+  - Dashboard accessible at `http://localhost:8082`
 - `authserver` - The forwardAuth gateway
+  - Accessible at `https://localhost:8082/oauth2/*`, see endpoints below for full detail,
 - `exampleservice` - a basic .NET app that has a single endpoint
+  - Accessible at: `https://localhost:8082/api/*`
 - `exampleapp` - a nextjs app that has a few pages:
-  - /p/welcome - public welcome page
-  - /p/signin - public signin page
-  - / - home page (protected by auth)
+  - `https://localhost:8082/p/welcome` - public welcome page
+  - `https://localhost:8082/p/signin` - public signin page
+  - `https://localhost:8082/` - home page (protected by auth)
 
 5. Making dev changes
 
@@ -119,7 +120,7 @@ These options are used for the cookie signin scheme - so apply to all IDPs
 
 ### 2. Providers
 
-- A list of IDP providers to use for signin
+- A list of Identity providers to use for signin
 
 | Key                        | Description                                                                       | Type   |
 | -------------------------- | --------------------------------------------------------------------------------- | ------ |
