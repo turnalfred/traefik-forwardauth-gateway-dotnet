@@ -1,5 +1,28 @@
 # Traefik ForwardAuth .NET Gateway Example
 
+## Contents:
+
+- [Introduction](#introduction)
+- [Endpoints](#endpoints)
+- [Example app](#example-app)
+  - [Welcome Page (public)](#welcome-page-public)
+  - [Signin Page (public)](#signin-page-public)
+  - [Home Page (protected)](#home-page-protected)
+- [Project Structure](#project-structure)
+- [Running Locally](#running-locally)
+- [Config](#config)
+  - [1. CookieOptions](#1-cookieoptions)
+    - [1.1 ClaimValueCheck](#11-claimvaluecheck)
+  - [2. Providers](#2-providers)
+    - [2.1 OpenIdOptions](#21-openidoptions)
+    - [2.2 ClaimTransformationOptions](#22-claimtransformationoptions)
+      - [2.3 ClaimTransformation](#23-claimtransformation)
+  - [3. ClaimToHeaderMappings](#3-claimtoheadermappings)
+  - [4. ClaimToUserInfoMappings](#4-claimtouserinfomappings)
+  - [5. Optional Parameters](#5-optional-parameters)
+
+## Introduction
+
 A traefik forwardAuth gateway/service written in .NET. The purpose of this service is to hook into the traefik forwardAuth middleware and provide a session related endpoints for an app sitting behind traefik. The auth gateway performs session related checks and then forwards user related info as forward (`X-Auth-*`) headers to downstream services.
 
 The topology of an app utilising a forwardAuth gateway might look something like the below:
@@ -16,6 +39,52 @@ Notable TODO's:
 - Redis session store
 - TLS from traefik -> authgateway
 - Authorization to downstream services
+
+## Endpoints
+
+The API surface of the authgateway is as follows:
+
+| Endpoint                               | Description                                                                                                    |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| /oauth2/providers                      | A list of the configured Identity providers to be used by a signin page                                        |
+| /oauth2/login/{providerName}           | Login endpoint to trigger an interactive signin for a specific provider                                        |
+| /oauth2/signin-oidc/{providerName}     | Callback endpoint for a specific provider                                                                      |
+| /oauth2/signout/{providerName}?sid=xxx | Signout endpoint for a provider. Note - Session ID should be passed for security purposes                      |
+| /oauth2/signout-oidc/{providerName}    | Callback signout endpoint for a specific provider                                                              |
+| /oauth2/user                           | User info endpoint - returns the properties for the current user (configured in ClaimToUserInfoMappings below) |
+| /oauth2/check                          | Used internally by the traefik forwardAuth middleware to check if the user has a valid session                 |
+| /oauth2/check/interactive              | Same as the check endpoint but will trigger an interactive login redirect if the session is not active         |
+
+## Example app
+
+The example app demonstrates how we can protect a Nextjs application as well as a .NET backend service using the auth gateway. In particular, it shows how we can decouple the auth config from the applications and consume them via the X-Auth headers.
+
+The nextjs application is running on next 13.4 and demonstrates both client and server components.
+
+## Welcome Page (public)
+
+The welcome page demonstrates an example of a public page that is served without the auth proxy. This is useful for pages that don't require auth or user-specific context. This page also serves as the redirect page for users that attempt to access a protected page.
+
+![Welcome Page](./docs/example-app/welcome.png)
+
+## Signin Page (public)
+
+The sign-in page demonstrates an example of a page that consumes the auth proxy provider endpoint in a 'headless' fashion (see endpoints section in the main readme). In the screenshot we have a signle identity provider the user can click to login with.
+
+![Sign-in Page](./docs/example-app/signin.png)
+
+## Home Page (protected)
+
+The homepage demonstrates a protected route behind the auth proxy.
+
+Some notable features:
+
+- In the top right the userinfo is pulled from the UserInfo endpoint.
+- The logout button redirects the user to the auth proxy for logout
+- The 'client component' on the left demonstrates how we can call a downstream service - in this case the example-service. Despite the call originiating on the client-side the example-service was able to recieve the user info headers from the auth proxy (X-Auth-User-Id, X-Auth-User-Name)
+- The 'server component' on the right demonstrates a nextjs server component, similarly as this is rendered on the server the app is able to read the X-Auth request headers.
+
+![Home Page](./docs/example-app/home.png)
 
 ## Project Structure
 
@@ -75,21 +144,6 @@ cd local-dev
 5. Making dev changes
 
 - To run the AuthServer or the React app directly on the machine comment out the relevant lines in the `./local-dev/start.sh` script and then make the traefik routing changes in `./local-dev/traefik/conf/dynamic.yaml` to point to the service running on the host.
-
-## Endpoints
-
-The API surface of the authgateway is as follows:
-
-| Endpoint                               | Description                                                                                                    |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| /oauth2/providers                      | A list of the configured Identity providers to be used by a signin page                                        |
-| /oauth2/login/{providerName}           | Login endpoint to trigger an interactive signin for a specific provider                                        |
-| /oauth2/signin-oidc/{providerName}     | Callback endpoint for a specific provider                                                                      |
-| /oauth2/signout/{providerName}?sid=xxx | Signout endpoint for a provider. Note - Session ID should be passed for security purposes                      |
-| /oauth2/signout-oidc/{providerName}    | Callback signout endpoint for a specific provider                                                              |
-| /oauth2/user                           | User info endpoint - returns the properties for the current user (configured in ClaimToUserInfoMappings below) |
-| /oauth2/check                          | Used internally by the traefik forwardAuth middleware to check if the user has a valid session                 |
-| /oauth2/check/interactive              | Same as the check endpoint but will trigger an interactive login redirect if the session is not active         |
 
 ## Config
 
