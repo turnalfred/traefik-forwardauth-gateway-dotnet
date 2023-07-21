@@ -1,0 +1,30 @@
+name: Build and Push AuthServer
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    env:
+      IMAGE_NAME: authserver
+      REGISTRY: ghcr.io/${{ github.repository_owner }}
+      TAG: latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build
+      run: docker-compose -f ./local-dev/authserver/docker-compose.authserver.yaml build $IMAGE_NAME
+    
+    - name: Login
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+      
+    - name: Push
+      run: docker push $REGISTRY/$IMAGE_NAME:$TAG
