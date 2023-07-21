@@ -20,6 +20,7 @@
   - [3. ClaimToHeaderMappings](#3-claimtoheadermappings)
   - [4. ClaimToUserInfoMappings](#4-claimtouserinfomappings)
   - [5. Optional Parameters](#5-optional-parameters)
+- [Further Reading & helpful links:](#further-reading--helpful-links)
 
 ## Introduction
 
