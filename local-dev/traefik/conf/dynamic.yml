@@ -1,26 +1,31 @@
 http:
   routers:
-    exampleapp-route: # example app main page routes
+    # example app main page routes
+    exampleapp-route: 
       rule: "Host(`localhost`)"
       service: example-app
       middlewares:
         - oauth-auth-redirect
       tls: true
-    exampleapp-public-route: # example app routes which are public (no auth)
+    # example app routes which are public (no auth)
+    exampleapp-public-route: 
       rule: "Host(`localhost`) && PathPrefix(`/p/`)"
       service: example-app
       tls: true
-    exampleapp-route-assets: # example app static assets are served unauthenticated
+    # example app static assets are served unauthenticated
+    exampleapp-route-assets:
       rule: "Host(`localhost`) && PathPrefix(`/_next/static/`)"
       service: example-app
       tls: true
-    exampleservice-route: # example service matches all under /api/
+    # example service matches all under /api/
+    exampleservice-route:
       rule: "Host(`localhost`) && PathPrefix(`/api/`)"
       service: example-service
       middlewares:
         - oauth-auth-redirect
       tls: true
-    services-oauth2-route: # authserver routes needed from UI (e.g. interactive login, userinfo)
+    # authserver routes needed from UI (e.g. interactive login, userinfo)
+    services-oauth2-route:
       rule: "Host(`localhost`) && PathPrefix(`/oauth2/providers`, `/oauth2/login` , `/oauth2/signin`, `/oauth2/user`, `/oauth2/signout`)"
       service: oauth-backend
       tls: true
@@ -35,12 +40,13 @@ http:
     oauth-backend:
       loadBalancer:
         servers:
-          # - url: http://authserver
-          - url: http://host.docker.internal:5250
+          - url: http://authserver
+          # - url: http://host.docker.internal:5250 # Uncomment to run gateway locally 
     example-app:
       loadBalancer:
         servers:
-          - url: http://host.docker.internal:3000 
+        - url: http://exampleapp:3000
+          # - url: http://host.docker.internal:3000 # Uncomment to run app locally 
 
   middlewares:
     auth-headers:
@@ -48,28 +54,25 @@ http:
         stsSeconds: 315360000
         browserXssFilter: true
         contentTypeNosniff: true
-        # forceSTSHeader: true
-        # stsIncludeSubdomains: true
-        # stsPreload: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
         frameDeny: true
     oauth-auth-redirect:
       forwardAuth:
-        # address: http://authserver/oauth2/check/interactive
-        address: http://host.docker.internal:5250/oauth2/check/interactive
+        address: http://authserver/oauth2/check/interactive
+        # address: http://host.docker.internal:5250/oauth2/check/interactive # Uncomment to run gateway locally 
         trustForwardHeader: true
         authResponseHeadersRegex: "^X-Auth-"
-        # authResponseHeaders:
-        #   - X-Auth-Request-Access-Token
-        #   - Authorization
     oauth-auth-wo-redirect:
       forwardAuth:
-        # address: http://authserver/oauth2/check
-        address: http://host.docker.internal:5250/oauth2/check
+        address: http://authserver/oauth2/check
+        # address: http://host.docker.internal:5250/oauth2/check # Uncomment to run gateway locally 
         trustForwardHeader: true
         authResponseHeadersRegex: "^X-Auth-"
+        # Can pass specific headers by name by uncommenting the below
         # authResponseHeaders:
-        #   - X-Auth-Request-Access-Token
-        #   - Authorization
+        #   - Authorization 
 
 tls:
   stores:

@@ -5,6 +5,35 @@ services:
     container_name: authserver
     build:
       context: ../src/
-      dockerfile: ./ForwardAuthServer.Api/Dockerfile
+      dockerfile: Dockerfile
+    environment:
+      # Cookie Options
+      - ForwardAuth__CookieOptions__CookieName=my_forward_auth_cookie
+      - ForwardAuth__CookieOptions__SameSiteMode=Lax
+      - ForwardAuth__CookieOptions__ExpiryTimeSpan=2:30:00
+      - ForwardAuth__CookieOptions__SlidingExpiration=false
+      # Provider Options
+      - ForwardAuth__Providers__[0]__Name=${IDP_NAME}
+      - ForwardAuth__Providers__[0]__DisplayName=${IDP_DISPLAY_NAME}
+      - ForwardAuth__Providers__[0]__OptionalBaseReturnUrl=http://localhost:8082
+      - ForwardAuth__Providers__[0]__OpenIdOptions__Authority=${IDP_AUTHORITY}
+      - ForwardAuth__Providers__[0]__OpenIdOptions__ClientId=${IDP_CLIENT_ID}
+      - ForwardAuth__Providers__[0]__OpenIdOptions__ClientSecret=${IDP_CLIENT_SECRET}
+      - ForwardAuth__Providers__[0]__OpenIdOptions__ResponseType=${IDP_RESPONSE_TYPE}
+      - ForwardAuth__Providers__[0]__OpenIdOptions__Scopes__0=openid
+      - ForwardAuth__Providers__[0]__OpenIdOptions__Scopes__1=profile
+      - ForwardAuth__Providers__[0]__OpenIdOptions__Scopes__2=offline_access
+      - ForwardAuth__Providers__[0]__OpenIdOptions__UsePkce=${IDP_USE_PKCE}
+      # Claim-to-Header Mapping
+      - ForwardAuth__ClaimToHeaderMappings__Mappings__sub=X-Auth-User-Id
+      - ForwardAuth__ClaimToHeaderMappings__Mappings__name=X-Auth-User-Name
+      - ForwardAuth__ClaimToHeaderMappings__MissingClaimAction=Warn
+      # Claim-to-UserInfo Mapping
+      - ForwardAuth__ClaimToUserInfoMappings__Mappings__sub=userId
+      - ForwardAuth__ClaimToUserInfoMappings__Mappings__name=name
+      - ForwardAuth__ClaimToUserInfoMappings__MissingClaimAction=Warn
+      # Optional
+      - ForwardAuth__OptionalDefaultProvider=${IDP_NAME}
+      - ForwardAuth__OptionalInteractiveChallengeRedirectOverrideUrl=https://localhost:8082/p/welcome
     networks:
       - application-network
