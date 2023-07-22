@@ -13,6 +13,12 @@ services:
       - ForwardAuth__CookieOptions__SameSiteMode=Lax
       - ForwardAuth__CookieOptions__ExpiryTimeSpan=2:30:00
       - ForwardAuth__CookieOptions__SlidingExpiration=false
+      # Token Management
+      - ForwardAuth__TokenManagement__Enabled=true
+      - ForwardAuth__TokenManagement__AccessTokenForwardHeaderKey=X-Auth-Access-Token
+      - ForwardAuth__TokenManagement__RedisConnectionString=redis:6379
+      - ForwardAuth__TokenManagement__RedisInstanceName=ForwardAuth
+      - ForwardAuth__TokenManagement__RefreshBeforeExpiry=00:05:00
       # Provider Options
       - ForwardAuth__Providers__[0]__Name=${IDP_NAME}
       - ForwardAuth__Providers__[0]__DisplayName=${IDP_DISPLAY_NAME}

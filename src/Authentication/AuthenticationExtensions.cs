@@ -23,6 +23,22 @@ public static class AuthenticationExtensions
             services.AddConfigurationFromSectionName<ForwardAuthOptions>(configuration,
                 ForwardAuthOptions.SectionName);
 
+        if (openIdOptions.TokenManagement.Enabled)
+        {
+            services.AddOpenIdConnectAccessTokenManagement(x =>
+            {
+                // TODO can we support multiple challenge schemes?
+                x.ChallengeScheme = GetAuthenticationSchemeNameFromProviderName(openIdOptions.OptionalDefaultProvider);
+                x.RefreshBeforeExpiration = openIdOptions.TokenManagement.RefreshBeforeExpiry;
+            });
+        
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = openIdOptions.TokenManagement.RedisConnectionString;
+                options.InstanceName = openIdOptions.TokenManagement.RedisInstanceName;
+            });
+        }
+
         var authBuilder = services.AddAuthentication(options =>
             {
                 options.DefaultScheme = _forwardAuthDefaultScheme;
@@ -64,6 +80,12 @@ public static class AuthenticationExtensions
 
                     return Task.CompletedTask;
                 };
+
+                options.Events.OnSigningOut = async e =>
+                {
+                    await e.HttpContext.RevokeRefreshTokenAsync();
+                };
+
             });
 
         foreach (var provider in openIdOptions.Providers)
@@ -92,7 +114,7 @@ public static class AuthenticationExtensions
                 {
                     await context.HttpContext.SignOutAsync(_forwardAuthDefaultScheme);
                 };
-
+                
                 // scopes
                 options.Scope.Clear();
                 foreach (var scope in provider.OpenIdOptions.Scopes)
@@ -103,15 +125,11 @@ public static class AuthenticationExtensions
                 // claim mapping options
                 options.MapInboundClaims = false;
                 options.GetClaimsFromUserInfoEndpoint = true;
-                options.SaveTokens = true;
+                options.SaveTokens = openIdOptions.TokenManagement.Enabled;
 
                 // add the IDP  the user authenticated with for later use
                 options.ClaimActions.Add(new AddStaticClaimAction(AuthenticationConstants.InternalChallengeProviderClaimType,
                     ClaimValueTypes.String, provider.Name));
-
-                options.ClaimActions.Add(new AddStaticClaimAction(ClaimTypes.Role, ClaimValueTypes.String, "admin"));
-                options.ClaimActions.Add(new AddStaticClaimAction(ClaimTypes.Role, ClaimValueTypes.String, "sysadmin"));
-                options.ClaimActions.Add(new AddStaticClaimAction(ClaimTypes.Role, ClaimValueTypes.String, "user"));
 
                 // run user-specified claim mappings for this provider
                 foreach (var claimTransformation in provider.ClaimTransformationOptions?.Transformations ??

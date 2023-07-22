@@ -17,6 +17,9 @@ public class ForwardAuthOptions
 
     [Required]
     public ClaimToUserInfoMappingOptions ClaimToUserInfoMappings { get; set; } = default!;
+    
+    [Required]
+    public TokenManagementOptions TokenManagement { get; set; } = default!;
 
     public string OptionalInteractiveChallengeRedirectOverrideUrl { get; set; } = string.Empty;
 

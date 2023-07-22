@@ -12,6 +12,7 @@ This repo is an example of integrating traefik forwardAuth with a .NET service. 
   - [Home Page (protected)](#home-page-protected)
 - [Project Structure](#project-structure)
 - [Running Locally](#running-locally)
+- [Token Management](#token-management)
 - [Config](#config)
   - [1. CookieOptions](#1-cookieoptions)
     - [1.1 ClaimValueCheck](#11-claimvaluecheck)
@@ -21,7 +22,8 @@ This repo is an example of integrating traefik forwardAuth with a .NET service. 
       - [2.3 ClaimTransformation](#23-claimtransformation)
   - [3. ClaimToHeaderMappings](#3-claimtoheadermappings)
   - [4. ClaimToUserInfoMappings](#4-claimtouserinfomappings)
-  - [5. Optional Parameters](#5-optional-parameters)
+  - [5. Token Management](#5-token-management)
+  - [6. Optional Parameters](#5-optional-parameters)
 - [Further Reading & helpful links:](#further-reading--helpful-links)
 
 ## Introduction
@@ -38,11 +40,10 @@ There are similar solutions such as oauth2-proxy that utilise traefik forwardAut
 
 Notable TODO's:
 
-- Refresh token rotation
-- Redis session store
+- L1/L2 cache for token management
+- Token revocation endpoints
+- Token management support for multiple providers (currently only supports 1)
 - TLS from traefik -> authgateway
-- Authorization to downstream services
-- Token revocation
 - CSRF middleware
 
 ## Endpoints
@@ -150,6 +151,16 @@ cd local-dev
 
 - To run the AuthServer or the React app directly on the machine comment out the relevant lines in the `./local-dev/start.sh` script and then make the traefik routing changes in `./local-dev/traefik/conf/dynamic.yaml` to point to the service running on the host.
 
+## Token Management
+
+Token management uses [Duende.AccessTokenManagement](https://github.com/DuendeSoftware/Duende.AccessTokenManagement) to manage token refresh. Tokens are stored in redis, so this likely adds a performance impact (latency, availability).
+
+_TODO:_
+
+Investigate L1/L2 cache implementation like that described in [Microsoft.Identity.Web](<https://github.com/AzureAD/microsoft-identity-web/wiki/L1-Cache-in-Distributed-(L2)-Token-Cache>). Can the access_token be stored in cookie storage so that most proxy requests are stateless?
+
+> "Starting with Microsoft Identity Web 1.8.0, when connecting to a Distributed cache (L2=Level 2) cache, such as Redis, SQL or Cosmos DB, Microsoft Identity Web will enable an InMemory (L1=Level 1) cache. This enables a more reliable and much more performant cache lookup, as the L2 cache, being distributed, is slower. Moreover, the L2 cache can fail, for example, due to a connectivity issue. The L1 cache will enable your customers to continue to sign-in and call protected web APIs."
+
 ## Config
 
 Below is the detailed configuration the authserver takes, all config keys are nested under the root key "ForwardAuth".
@@ -248,7 +259,19 @@ Note - Mapping key:values are in the format ClaimType:HeaderName
 
 Note - Mapping key:values are in the format ClaimType:UserInfoKey
 
-### 5. Optional Parameters
+### 5. Token Management
+
+See section on [Token Management](#token-management) for more details
+
+| Key                         | Description                                                      | Type   |
+| --------------------------- | ---------------------------------------------------------------- | ------ |
+| Enabled                     | Whether token management is enabled                              | bool   |
+| AccessTokenForwardHeaderKey | The header key to use for the access token                       | string |
+| RedisConnectionString       | The redis connection string to use for token management          | string |
+| RedisInstanceName           | The redis instance name to use for token management              | string |
+| RefreshBeforeExpiry         | The timespan before the access token expiry to refresh the token | string |
+
+### 6. Optional Parameters
 
 | Key                                             | Description                                                            | Type   |
 | ----------------------------------------------- | ---------------------------------------------------------------------- | ------ |
