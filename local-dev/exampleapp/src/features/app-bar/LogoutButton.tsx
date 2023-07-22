@@ -48,6 +48,7 @@ export const LogoutButton = () => {
               <Link
                 href={info.data?.userEndpoints.logout ?? ""}
                 className="py-2 px-4 rounded-lg bg-blue-500"
+                prefetch={false}
               >
                 Yes
               </Link>

@@ -1,5 +1,8 @@
+using Duende.AccessTokenManagement.OpenIdConnect;
 using ForwardAuthGateway.Authorization;
+using ForwardAuthGateway.Options;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace ForwardAuthGateway.Endpoints;
 
@@ -22,8 +25,17 @@ public static class AuthCheckEndpoints
         return group;
     }
 
-    static readonly Delegate CheckHandler = (HttpContext ctx, [FromServices] IClaimMappingService mappingService) =>
+    private static readonly Delegate CheckHandler = async (HttpContext ctx,
+        [FromServices] IClaimMappingService mappingService,
+        [FromServices] IOptions<ForwardAuthOptions> options,
+        [FromServices] IUserTokenManagementService userTokenManagementService) =>
     {
+        if (options.Value.TokenManagement.Enabled)
+        {
+            var token = await userTokenManagementService.GetAccessTokenAsync(ctx.User);
+            ctx.Response.Headers.Add(options.Value.TokenManagement.AccessTokenForwardHeaderKey, token.AccessToken);
+        }
+        
         foreach (var (header, value) in mappingService.MapCurrentUserClaimsToHeaders())
         {
             ctx.Response.Headers.Add(header, value);
