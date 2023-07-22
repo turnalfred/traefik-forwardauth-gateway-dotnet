@@ -6,7 +6,11 @@ export const useUserInfo = () =>
   useQuery<{
     userInfo: { userId: string; name: string };
     userEndpoints: { logout: string };
-  }>(["user-info"], () => fetch("/oauth2/user").then((res) => res.json()));
+  }>(["user-info"], () =>
+    fetch("/oauth2/user", { headers: { "CSRF-Token": "1" } }).then((res) =>
+      res.json()
+    )
+  );
 
 export const UserInfo = () => {
   const info = useUserInfo();

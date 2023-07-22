@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 
 export const ClientComponent = () => {
   const { data } = useQuery(["client-component"], () =>
-    fetch("/api/hello").then((res) => res.json())
+    fetch("/api/hello", { headers: { "CSRF-Token": "1" } }).then((res) =>
+      res.json()
+    )
   );
   return (
     <div className="w-[50%] flex flex-col gap-4 outline-dashed outline-1 outline-green-50 p-4 rounded-lg">

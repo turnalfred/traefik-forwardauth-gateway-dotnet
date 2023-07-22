@@ -5,7 +5,9 @@ import Link from "next/link";
 
 const useGetIdps = () =>
   useQuery<{ name: string; loginUrl: string }[]>(["idps"], () =>
-    fetch("/oauth2/providers").then((res) => res.json())
+    fetch("/oauth2/providers", { headers: { "CSRF-Token": "1" } }).then((res) =>
+      res.json()
+    )
   );
 
 export function SigninPage() {

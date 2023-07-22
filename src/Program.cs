@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddForwardAuth(builder.Configuration);
 builder.Services.AddAuthorization();
 builder.Services.AddCurrentUser();
+builder.Services.AddScoped<AntiForgeryEndpointFilter>();
 
 var app = builder.Build();
 
@@ -27,9 +28,14 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapLoginEndpoints();
-app.MapUserEndpoints();
 app.MapAuthCheckEndpoints();
+app.MapLoginEndpoints();
+
+// applying EndpointFilters only to endpoints being consumed in a headless fashion. see TODO in AntiForgeryEndpointFilter.cs
+app.MapProviderEndpoints()
+    .AddEndpointFilter<AntiForgeryEndpointFilter>();
+
+app.MapUserEndpoints()
+    .AddEndpointFilter<AntiForgeryEndpointFilter>();
 
 app.Run();

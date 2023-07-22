@@ -13,16 +13,6 @@ public static class LoginEndpoints
         var group = routes.MapGroup("/oauth2")
             .WithTags("oauth2");
 
-        group.MapGet("/providers",
-                ([FromServices] IOptions<ForwardAuthOptions> options) =>
-                    Task.FromResult(TypedResults.Ok(options.Value.Providers.Select(x => new ProviderInfoResponseItem
-                    {
-                        Name = x.DisplayName,
-                        LoginUrl = $"/oauth2/login/{x.Name}"
-                    }))))
-            .AllowAnonymous()
-            .WithDescription("Get a list of active IDPs supported by the AuthServer.");
-
         group.MapGet("/login/{provider}", ([FromRoute] string provider,
                 [FromQuery] string? returnPath,
                 IOptions<ForwardAuthOptions> options) =>
@@ -46,10 +36,4 @@ public static class LoginEndpoints
 
         return group;
     }
-}
-
-public class ProviderInfoResponseItem
-{
-    public required string Name { get; set; }
-    public required string LoginUrl { get; set; }
 }
