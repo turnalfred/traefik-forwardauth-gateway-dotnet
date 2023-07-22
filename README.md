@@ -41,6 +41,7 @@ There are similar solutions such as oauth2-proxy that utilise traefik forwardAut
 Notable TODO's:
 
 - L1/L2 cache for token management
+- DataProtectionKeys for RedisTicketStore (?)
 - Token revocation endpoints
 - Token management support for multiple providers (currently only supports 1)
 - TLS from traefik -> authgateway

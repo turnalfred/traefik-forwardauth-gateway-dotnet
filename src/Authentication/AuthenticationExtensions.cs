@@ -3,6 +3,7 @@ using ForwardAuthGateway.Exceptions;
 using ForwardAuthGateway.Extensions;
 using ForwardAuthGateway.Options;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Net.Http.Headers;
 
 namespace ForwardAuthGateway.Authentication;
@@ -51,13 +52,23 @@ public static class AuthenticationExtensions
                 options.DefaultSignOutScheme =
                     GetAuthenticationSchemeNameFromProviderName(openIdOptions.OptionalDefaultProvider);
             })
-            .AddCookie(_forwardAuthDefaultScheme, options =>
+            .AddCookie(_forwardAuthDefaultScheme, (options) =>
             {
                 options.ExpireTimeSpan = openIdOptions.CookieOptions.ExpiryTimeSpan;
                 options.SlidingExpiration = openIdOptions.CookieOptions.SlidingExpiration;
                 options.Cookie.Name = openIdOptions.CookieOptions.CookieName;
                 options.Cookie.SameSite = openIdOptions.CookieOptions.SameSiteMode;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                
+                if (openIdOptions.TokenManagement.Enabled)
+                {
+                    // TODO L1/L2 cache implementation
+                    options.SessionStore = new RedisCacheTicketStore(new RedisCacheOptions
+                    {
+                        Configuration = openIdOptions.TokenManagement.RedisConnectionString
+                    });
+                }
+                
                 options.Events.OnSigningIn = context =>
                 {
                     if (context.Principal is null)
@@ -85,7 +96,6 @@ public static class AuthenticationExtensions
                 {
                     await e.HttpContext.RevokeRefreshTokenAsync();
                 };
-
             });
 
         foreach (var provider in openIdOptions.Providers)
