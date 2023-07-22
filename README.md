@@ -1,5 +1,7 @@
 # Traefik ForwardAuth .NET Gateway Example
 
+This repo is an example of integrating traefik forwardAuth with a .NET service. It's mostly a proof of concept so if you're looking for a proper solution please see [further reading & helpful links](#further-reading--helpful-links).
+
 ## Contents:
 
 - [Introduction](#introduction)
@@ -40,6 +42,8 @@ Notable TODO's:
 - Redis session store
 - TLS from traefik -> authgateway
 - Authorization to downstream services
+- Token revocation
+- CSRF middleware
 
 ## Endpoints
 
